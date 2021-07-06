@@ -44,17 +44,19 @@ n_a = (n_core+n_beam)*np.random.uniform(a,b,S)
 V=np.logspace(np.log10(300),np.log10(5000),59);
 v = (np.sqrt(2*1.60217662*10**-19*(V)/(1.6726219*10**-27)))
 
-V_high=np.logspace(np.log10(307.317073),np.log10(5121.95121),59);
-V_low=np.logspace(np.log10(292.68292),np.log10(4878.04878),59);
+V_high=np.logspace(np.log10(307.317073),np.log10(5121.95121),59)
+V_low=np.logspace(np.log10(292.68292),np.log10(4878.04878),59)
 
 dV=(V_high-V_low)
-
+asd
 m = 1.67272*10**-27 # proton mass
 q=1.60217662*10**-19 # charge
 
 #G = normrnd(0,1,[1000000 1]); # add random noise to the VDF
+################ plotting
 
 from get_fv import get_fv
 i=0
 f_core = get_fv(v_core[i],vth_core[i], dV,q,m,v,n_core[i])    
-
+f_beam = get_fv(v_beam[i],vth_beam[i], dV,q,m,v,n_beam[i])   
+f_alpha = get_fv(v_a[i],vth_a[i], dV,q,m,v,n_a[i])   
