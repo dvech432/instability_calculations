@@ -6,27 +6,41 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 from PIL import Image
 import pandas as pd
+import numpy as np
 
 import os
 folder_content=os.listdir(r'C:\Users\vechd\.spyder-py3\instability_calc\VDF_images')
-
-img_grid=[]
+#folder_content.sort()
+import skimage.io as io
+all_images = []
 for i in range(0,len(folder_content)):
   filename = r'C:\Users\vechd\.spyder-py3\instability_calc\VDF_images\\' + folder_content[i]
-  image = Image.open(filename)
-  new_image = image.resize((100, 100))
-  img_grid.append(new_image)
-
-#### get regression values
+  img = io.imread(filename,as_gray=True)
+  all_images.append(img)
+x_train = np.array(all_images)   
+x_train = x_train.reshape(-1, 100, 100, 1)
+ 
+#### get regression values and normalize them
 filename = r'C:\Users\vechd\.spyder-py3\instability_calc\params.txt'
-params=pd.read_csv(filename)
+params=np.array(pd.read_csv(filename))
+
+from scipy import stats
+core_ani=params[:,2]/params[:,1]
+core_ani=stats.zscore(core_ani)
+params=stats.zscore(params,axis=0)
 
 #### test train
-from sklearn.model_selection import train_test_split
-
-X_train, X_test, y_train, y_test = train_test_split(img_grid, params[:,0], test_size=0.15, random_state=42)
-
-
+# %%
 ### define network
-from cnn import cnn
-m=cnn()
+from cnn_regression import cnn_regression
+m=cnn_regression()
+
+m.fit(x_train, np.reshape(params[:,1],(-1,1)), batch_size=100,epochs=200, verbose=1)
+
+core_ani_pred=m.predict(x_train)
+
+plt.scatter(core_ani_pred, np.reshape(params[:,1],(-1,1)))
+
+# %%
+io.imshow(x_train[129,:,:,:])
+plt.show()

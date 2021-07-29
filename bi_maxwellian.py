@@ -80,10 +80,14 @@ from scipy.interpolate import griddata
 #   Z_beam=n_beam[i]*(m/(2*np.pi*kb*T_beam_perp[i]))*(m/(2*np.pi*kb*T_beam_perp[i]))**(0.5)*np.exp(-m*(((v_beam[i]-v_core[i])-v_x)**2)/(2*kb*T_beam_perp[i]))*np.exp(-m*((v_y)**2)/(2*kb*T_beam_par[i]))
 #   pp.append(np.max(np.log10(Z_core+Z_beam)))
 
-
+from PIL import Image
 #for i in range(0,len(n_core)):
-for i in range(0,100):
-  Z_core=n_core[i]*(m/(2*np.pi*kb*T_core_perp[i]))*(m/(2*np.pi*kb*T_core_perp[i]))**(0.5)*np.exp(-m*((v_x)**2)/(2*kb*T_core_perp[i]))*np.exp(-m*((v_y)**2)/(2*kb*T_core_par[i]))
+for i in range(0,1000):
+  #Z_core=n_core[i]*(m/(2*np.pi*kb*T_core_perp[i]))*(m/(2*np.pi*kb*T_core_perp[i]))**(0.5)*np.exp(-m*((v_x)**2)/(2*kb*T_core_perp[i]))*np.exp(-m*((v_y)**2)/(2*kb*T_core_par[i]))
+  
+  ### par online Z_core
+  Z_core=n_core[i]*(m/(2*np.pi*kb*T_core_perp[i]))*(m/(2*np.pi*kb*T_core_perp[i]))**(0.5)*np.exp(-m*((v_x)**2)/(2*kb*T_core_par[i]))*np.exp(-m*((v_y)**2)/(2*kb*T_core_par[i]))
+  
   Z_beam=n_beam[i]*(m/(2*np.pi*kb*T_beam_perp[i]))*(m/(2*np.pi*kb*T_beam_perp[i]))**(0.5)*np.exp(-m*(((v_beam[i]-v_core[i])-v_x)**2)/(2*kb*T_beam_perp[i]))*np.exp(-m*((v_y)**2)/(2*kb*T_beam_par[i]))
   ### interpolation to the Alfv normalized grid
   v_xn= v_x/alfv[i]
@@ -96,20 +100,24 @@ for i in range(0,100):
   ax = fig.add_axes([0, 0, 1, 1])
   levels=np.logspace(-1,0,10)
   #cnt = ax.contour(v_xa,v_ya, grid_z0, levels, cmap='viridis')
-  #cnt = ax.contour(v_xa,v_ya, grid_z0, levels, colors=['black'])
+  #cnt = ax.contour(v_x,v_y,(Z_core/np.max(Z_core)), levels, colors=['black']) #try2
   #plt.contour(v_xa,v_ya, grid_z0, levels, colors=['black'])
   
   #cnt = ax.pcolor(grid_z0, cmap='viridis')
-  cnt = ax.pcolor(np.log10(Z_core+Z_beam), cmap='viridis',clim=(0,1))
+  cnt = ax.pcolor(np.log10( (Z_core)/np.max(Z_core)), cmap='viridis') #tr1
   ax.axis('off')
   ax.set_aspect('equal', 'box')
   #colorbar = plt.colorbar(cnt)
-  cnt.set_clim(vmin=-15, vmax=-12)
+  #cnt.set_clim(vmin=-15, vmax=-12) # non-normalized data
+  cnt.set_clim(vmin=-1, vmax=0) # non-normalized data
   plt.show()
-
-  filename = r'C:\Users\vechd\.spyder-py3\instability_calc\VDF_images\\' + str(i) + '_QQ.jpg'
+  
+  filename = r'C:\Users\vechd\.spyder-py3\instability_calc\VDF_images\\' + str(i).zfill(5) + '_QQ.jpg'
   fig.savefig(filename,bbox_inches='tight')
-  
-  
+   
+  ### resize image and save
+  image = Image.open(filename)
+  new_image = (image.resize((100, 100)))
+  new_image.save(filename)
   
   
