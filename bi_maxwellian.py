@@ -68,7 +68,7 @@ params.to_csv(filename,index=False)
 
 v_x, v_y=np.meshgrid(np.linspace(-200*1000,200*1000,100),np.linspace(-200*1000,200*1000,100))
  
-v_xa, v_ya= np.meshgrid(np.linspace(-8,8,100),np.linspace(-8,8,100))
+v_xa, v_ya= np.meshgrid(np.linspace(-4,4,100),np.linspace(-4,4,100))
 
 import matplotlib.pyplot as plt
 from scipy.interpolate import griddata
@@ -83,11 +83,7 @@ from scipy.interpolate import griddata
 from PIL import Image
 #for i in range(0,len(n_core)):
 for i in range(0,1000):
-  #Z_core=n_core[i]*(m/(2*np.pi*kb*T_core_perp[i]))*(m/(2*np.pi*kb*T_core_perp[i]))**(0.5)*np.exp(-m*((v_x)**2)/(2*kb*T_core_perp[i]))*np.exp(-m*((v_y)**2)/(2*kb*T_core_par[i]))
-  
-  ### par online Z_core
-  Z_core=n_core[i]*(m/(2*np.pi*kb*T_core_perp[i]))*(m/(2*np.pi*kb*T_core_perp[i]))**(0.5)*np.exp(-m*((v_x)**2)/(2*kb*T_core_par[i]))*np.exp(-m*((v_y)**2)/(2*kb*T_core_par[i]))
-  
+  Z_core=n_core[i]*(m/(2*np.pi*kb*T_core_perp[i]))*(m/(2*np.pi*kb*T_core_perp[i]))**(0.5)*np.exp(-m*((v_x)**2)/(2*kb*T_core_perp[i]))*np.exp(-m*((v_y)**2)/(2*kb*T_core_par[i]))  
   Z_beam=n_beam[i]*(m/(2*np.pi*kb*T_beam_perp[i]))*(m/(2*np.pi*kb*T_beam_perp[i]))**(0.5)*np.exp(-m*(((v_beam[i]-v_core[i])-v_x)**2)/(2*kb*T_beam_perp[i]))*np.exp(-m*((v_y)**2)/(2*kb*T_beam_par[i]))
   ### interpolation to the Alfv normalized grid
   v_xn= v_x/alfv[i]
@@ -96,6 +92,7 @@ for i in range(0,1000):
   values = ((Z_core.flatten()+Z_beam.flatten())/np.max(Z_core.flatten()+Z_beam.flatten()))
   grid_z0 = griddata(points, values, (v_xa, v_ya), method='linear')
   #grid_z0 = np.nan_to_num(grid_z0, nan=0)
+  grid_z0 = np.nan_to_num(grid_z0, nan=0.000001)
   fig = plt.figure()
   ax = fig.add_axes([0, 0, 1, 1])
   levels=np.logspace(-1,0,10)
@@ -103,9 +100,10 @@ for i in range(0,1000):
   #cnt = ax.contour(v_x,v_y,(Z_core/np.max(Z_core)), levels, colors=['black']) #try2
   #plt.contour(v_xa,v_ya, grid_z0, levels, colors=['black'])
   
+  cnt = ax.pcolor(v_xa,v_ya,np.log10( grid_z0), cmap='viridis') #tr1
   #cnt = ax.pcolor(grid_z0, cmap='viridis')
-  cnt = ax.pcolor(np.log10( (Z_core)/np.max(Z_core)), cmap='viridis') #tr1
-  ax.axis('off')
+  #cnt = ax.pcolor(np.log10( (Z_core+Z_beam)/np.max(Z_core+Z_beam)), cmap='viridis') #tr1
+  #ax.axis('off')
   ax.set_aspect('equal', 'box')
   #colorbar = plt.colorbar(cnt)
   #cnt.set_clim(vmin=-15, vmax=-12) # non-normalized data
