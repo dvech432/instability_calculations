@@ -28,20 +28,31 @@ filename = r'C:\Users\vechd\.spyder-py3\instability_calc\dim_params.txt'
 dim_params.to_csv(filename,index=False)
 
 
+### Open and save Helios data
+
+import pandas as pd
+import numpy as np
+import os
+### read in PLUME input/output
+filename = r'C:\Users\vechd\.spyder-py3\instability_calc\helios_files\Helios_CB.h5'
+helios = pd.read_hdf(filename)
+
+
+
 #### convertin back to physical units
-m=1.67272*10**-27 # proton mass
-q=1.60217662*10**-19 # charge
-kb=1.38064852*10**-23 # boltzmann constant
-c=299792458 # speed of light
+# m=1.67272*10**-27 # proton mass
+# q=1.60217662*10**-19 # charge
+# kb=1.38064852*10**-23 # boltzmann constant
+# c=299792458 # speed of light
 
 
-vth_core_par = df['$v_t/c$']*c
-T_core_par = (m*(vth_core_par**2))/(2*kb)
-T_core_perp = df['$\\alpha_c$']*T_core_par
-vth_core_perp= (2*kb*T_core_perp/m)**(0.5)
+# vth_core_par = df['$v_t/c$']*c
+# T_core_par = (m*(vth_core_par**2))/(2*kb)
+# T_core_perp = df['$\\alpha_c$']*T_core_par
+# vth_core_perp= (2*kb*T_core_perp/m)**(0.5)
 
 
-T_beam_par = T_core_par/df['$\\tau_b$']
-vth_beam_par = (2*kb*T_beam_par/m)**(0.5)
-T_beam_perp = T_beam_par*df['$\\alpha_b$']
-vth_beam_perp = (2*kb*T_beam_perp/m)**(0.5)
+# T_beam_par = T_core_par/df['$\\tau_b$']
+# vth_beam_par = (2*kb*T_beam_par/m)**(0.5)
+# T_beam_perp = T_beam_par*df['$\\alpha_b$']
+# vth_beam_perp = (2*kb*T_beam_perp/m)**(0.5)
