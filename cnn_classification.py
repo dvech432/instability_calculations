@@ -27,9 +27,12 @@ def cnn_classification():
   m.add(layers.Dropout(0.2))
   m.add(layers.Flatten())
   m.add(layers.Dense(1, activation='sigmoid'))
-  #opt = keras.optimizers.SGD(learning_rate=0.001, decay=1e-6)
-  #m.compile(optimizer = opt, loss = 'binary_crossentropy',metrics='accuracy')
-  m.compile(optimizer = 'SGD', loss = 'binary_crossentropy',metrics='accuracy')
+  
+  #### testing with various learning and decay rates
+  opt = keras.optimizers.Adam(learning_rate=0.0001, decay=1e-6)
+  m.compile(optimizer = opt, loss = 'binary_crossentropy',metrics='accuracy')
+  
+  #m.compile(optimizer = 'SGD', loss = 'binary_crossentropy',metrics='accuracy')
   return m
 
 

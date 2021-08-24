@@ -13,7 +13,7 @@ filename = r'D:\Research\Data\DISP\NyKris_Durovcova_Helios.h5'
 # with pd.HDFStore(filename) as hdf:
 #     # This prints a list of all group names:
 #     print(hdf.keys())
-helios_df = pd.read_hdf(filename,key='/all data', start=0, stop=25000)
+helios_df = pd.read_hdf(filename,key='/all data', start=0, stop=50000)
 ##### pick the required params from the data frame
 dim_params=np.array(helios_df[['B [nT]', 'n_p_core [cm^-3]','v_sw_core [m/s]','T_par_core [eV]','T_perp_core [eV]',
                'n_p_beam [cm^-3]','v_sw_beam [m/s]','T_par_beam [eV]','T_perp_beam [eV]',

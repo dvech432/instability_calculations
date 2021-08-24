@@ -1,5 +1,5 @@
 
-def cnn_regression():
+def cnn_classification_grid_search(lr, dc,op_type):
 
   from tensorflow import keras
   from tensorflow.keras import layers
@@ -22,20 +22,23 @@ def cnn_regression():
   m.add(layers.AvgPool2D(pool_size=(2,2),strides=2)    )
   m.add(layers.Conv2D(filters=64, kernel_size=3, padding="same" )  )
 
-#### adding extra layers 
-  
-  m.add(layers.Activation('relu'))
-  m.add(layers.BatchNormalization())
-  m.add(layers.AvgPool2D(pool_size=(2,2),strides=2)    )
-  m.add(layers.Conv2D(filters=64, kernel_size=3, padding="same" )  )
-  
   m.add(layers.Activation('relu'))
   m.add(layers.BatchNormalization())
   m.add(layers.Dropout(0.2))
   m.add(layers.Flatten())
-  m.add(layers.Dense(1, activation='linear'))
-  opt = keras.optimizers.Adam(learning_rate=0.0001, decay=1e-6)
-  m.compile(optimizer = opt, loss = 'mean_squared_error')
+  m.add(layers.Dense(1, activation='sigmoid'))
+  
+  #### testing with various learning and decay rates
+  if op_type=='Adam':
+    opt = keras.optimizers.Adam(learning_rate=lr, decay=dc)
+  if op_type=='SGD':
+    opt = keras.optimizers.SGD(learning_rate=lr, decay=dc)  
+  if op_type=='RMSprop':
+    opt = keras.optimizers.RMSprop(learning_rate=lr, decay=dc)    
+    
+  m.compile(optimizer = opt, loss = 'binary_crossentropy',metrics='accuracy')
+  
+  #m.compile(optimizer = 'SGD', loss = 'binary_crossentropy',metrics='accuracy')
   return m
 
 

@@ -1,5 +1,5 @@
 
-def cnn_regression():
+def cnn_regression_grid_search(lr, dc,op_type):
 
   from tensorflow import keras
   from tensorflow.keras import layers
@@ -34,6 +34,16 @@ def cnn_regression():
   m.add(layers.Dropout(0.2))
   m.add(layers.Flatten())
   m.add(layers.Dense(1, activation='linear'))
+  
+    #### testing with various learning and decay rates
+  if op_type=='Adam':
+    opt = keras.optimizers.Adam(learning_rate=lr, decay=dc)
+  if op_type=='SGD':
+    opt = keras.optimizers.SGD(learning_rate=lr, decay=dc)  
+  if op_type=='RMSprop':
+    opt = keras.optimizers.RMSprop(learning_rate=lr, decay=dc)   
+  
+  
   opt = keras.optimizers.Adam(learning_rate=0.0001, decay=1e-6)
   m.compile(optimizer = opt, loss = 'mean_squared_error')
   return m

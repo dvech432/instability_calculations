@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#### function that generates and saves VDFs images that include up to 3 particle populations
 
 def create_image_helios_3comps(dim_params, v_x,v_y, v_xa, v_ya):
   import numpy as np
@@ -48,9 +48,9 @@ def create_image_helios_3comps(dim_params, v_x,v_y, v_xa, v_ya):
   from PIL import Image
   
   for i in range(0,len(n_core)):
-    Z_core=n_core[i]*(m/(2*np.pi*kb*T_core_perp[i]))*(m/(2*np.pi*kb*T_core_par[i]))**(0.5)*np.exp(-m*((v_x)**2)/(2*kb*T_core_perp[i]))*np.exp(-m*((v_y)**2)/(2*kb*T_core_par[i]))  
-    Z_beam=n_beam[i]*(m/(2*np.pi*kb*T_beam_perp[i]))*(m/(2*np.pi*kb*T_beam_par[i]))**(0.5)*np.exp(-m*(((v_beam[i]-v_core[i])-v_x)**2)/(2*kb*T_beam_perp[i]))*np.exp(-m*((v_y)**2)/(2*kb*T_beam_par[i]))
-    Z_alpha=n_alpha[i]*((4*m)/(2*np.pi*kb*T_alpha_perp[i]))*((4*m)/(2*np.pi*kb*T_alpha_par[i]))**(0.5)*np.exp(-(4*m)*(((v_alpha[i]-v_core[i])-v_x)**2)/(2*kb*T_alpha_perp[i]))*np.exp(-(4*m)*((v_y)**2)/(2*kb*T_alpha_par[i]))
+    Z_core=n_core[i]*(m/(2*np.pi*kb*T_core_perp[i]))*(m/(2*np.pi*kb*T_core_par[i]))**(0.5)*np.exp(-m*((v_x)**2)/(2*kb*T_core_par[i]))*np.exp(-m*((v_y)**2)/(2*kb*T_core_perp[i]))  
+    Z_beam=n_beam[i]*(m/(2*np.pi*kb*T_beam_perp[i]))*(m/(2*np.pi*kb*T_beam_par[i]))**(0.5)*np.exp(-m*(((v_beam[i]-v_core[i])-v_x)**2)/(2*kb*T_beam_par[i]))*np.exp(-m*((v_y)**2)/(2*kb*T_beam_perp[i]))
+    Z_alpha=n_alpha[i]*((4*m)/(2*np.pi*kb*T_alpha_perp[i]))*((4*m)/(2*np.pi*kb*T_alpha_par[i]))**(0.5)*np.exp(-(4*m)*(((v_alpha[i]-v_core[i])-v_x)**2)/(2*kb*T_alpha_par[i]))*np.exp(-(4*m)*((v_y)**2)/(2*kb*T_alpha_perp[i]))
     
     Z_core[np.isnan(Z_core)] = 0
     Z_beam[np.isnan(Z_beam)] = 0
@@ -86,16 +86,16 @@ def create_image_helios_3comps(dim_params, v_x,v_y, v_xa, v_ya):
     #plt.contour(v_xa,v_ya, grid_z0, levels, colors=['black'])
   
     ###### Pcolor approach
-    cnt = ax.pcolor(v_xa,v_ya,( grid_z0), cmap='viridis',shading='auto') # Alfv norm
+    ##### NOTE: np.log10 is on
+    cnt = ax.pcolor(v_xa,v_ya, np.log10( grid_z0), cmap='viridis',shading='auto') # Alfv norm
     #cnt = ax.pcolor(v_x,v_y,np.log10( (Z_core+Z_beam)/np.max((Z_core+Z_beam))    ), cmap='viridis') # Thermal speed norm
   
     ax.axis('off')
     ax.set_aspect('equal', 'box')
-    #cnt.set_clim(vmin=-1, vmax=0) # for log-scale normalization
-    cnt.set_clim(vmin=0.01, vmax=1) # for lin-scale normalization
-    #plt.show()
+    cnt.set_clim(vmin=-1, vmax=0) # for log-scale normalization
+    #cnt.set_clim(vmin=0.01, vmax=1) # for lin-scale normalization
   
-    filename = r'D:\Research\Data\DISP\VDF_images_helios_3comps\\' + str(i).zfill(5) + '_QQ.jpg'
+    filename = r'D:\Research\Data\DISP\VDF_images_helios_3comps_log\\' + str(i).zfill(5) + '_QQ.jpg'
     fig.savefig(filename,bbox_inches='tight')
    
     plt.clf()

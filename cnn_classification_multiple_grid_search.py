@@ -1,41 +1,39 @@
 
-def cnn_regression():
+def cnn_classification_multiple_grid_search(lr, dc,op_type):
 
   from tensorflow import keras
   from tensorflow.keras import layers
-  
-  m = keras.Sequential()
-  m.add(layers.Conv2D(filters=8, kernel_size=3, input_shape=(100,100,1),padding="same" )  )
-  
-  m.add(layers.Activation('relu'))
-  m.add(layers.BatchNormalization())
-  m.add(layers.AvgPool2D(pool_size=(2,2),strides=2)    )
-  m.add(layers.Conv2D(filters=16, kernel_size=3,padding="same" )  )
+  from create_convolution_layers import create_convolution_layers
+  from keras.models import Model
+  lin_input = layers.Input(shape=(100,100,1))
+  lin_model = create_convolution_layers(lin_input)
 
-  m.add(layers.Activation('relu'))
-  m.add(layers.BatchNormalization())
-  m.add(layers.AvgPool2D(pool_size=(2,2),strides=2)    )
-  m.add(layers.Conv2D(filters=32, kernel_size=3, padding="same" )  )
+  log_input = layers.Input(shape=(100,100,1))
+  log_model = create_convolution_layers(log_input)
 
-  m.add(layers.Activation('relu'))
-  m.add(layers.BatchNormalization())
-  m.add(layers.AvgPool2D(pool_size=(2,2),strides=2)    )
-  m.add(layers.Conv2D(filters=64, kernel_size=3, padding="same" )  )
+  conv = layers.concatenate([lin_model, log_model])
 
-#### adding extra layers 
+  conv = layers.Flatten()(conv)
+
+  dense = layers.Dense(512)(conv)
+  dense = layers.LeakyReLU(alpha=0.1)(dense)
+  dense = layers.Dropout(0.5)(dense)
+
+  output = layers.Dense(1, activation='sigmoid')(dense)
+
+  m = keras.models.Model(inputs=[lin_input, log_input], outputs=[output])
+
+  #### testing with various learning and decay rates
+  if op_type=='Adam':
+    opt = keras.optimizers.Adam(learning_rate=lr, decay=dc)
+  if op_type=='SGD':
+    opt = keras.optimizers.SGD(learning_rate=lr, decay=dc)  
+  if op_type=='RMSprop':
+    opt = keras.optimizers.RMSprop(learning_rate=lr, decay=dc)    
+    
+  m.compile(optimizer = opt, loss = 'binary_crossentropy',metrics='accuracy')
   
-  m.add(layers.Activation('relu'))
-  m.add(layers.BatchNormalization())
-  m.add(layers.AvgPool2D(pool_size=(2,2),strides=2)    )
-  m.add(layers.Conv2D(filters=64, kernel_size=3, padding="same" )  )
-  
-  m.add(layers.Activation('relu'))
-  m.add(layers.BatchNormalization())
-  m.add(layers.Dropout(0.2))
-  m.add(layers.Flatten())
-  m.add(layers.Dense(1, activation='linear'))
-  opt = keras.optimizers.Adam(learning_rate=0.0001, decay=1e-6)
-  m.compile(optimizer = opt, loss = 'mean_squared_error')
+  #m.compile(optimizer = 'SGD', loss = 'binary_crossentropy',metrics='accuracy')
   return m
 
 
