@@ -63,7 +63,7 @@ def gen_AlexNet():
   AlexNet.add(layers.Activation('sigmoid'))
   ## searching for the best params
   #1) opt = keras.optimizers.SGD(learning_rate=0.001, decay=1e-6)
-  opt = keras.optimizers.Adam(learning_rate=0.1, decay=1e-6) #2
+  opt = keras.optimizers.Adam(learning_rate=0.001, decay=1e-6) #2
   #m.compile(optimizer = opt, loss = 'binary_crossentropy',metrics='accuracy')
   AlexNet.compile(optimizer = opt, loss = 'binary_crossentropy',metrics='accuracy')
   

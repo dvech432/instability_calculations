@@ -63,8 +63,13 @@ def create_image_helios_3comps(dim_params, v_x,v_y, v_xa, v_ya):
     r2 = np.reshape( np.random.uniform(0,2*np.pi, len(Z_core.flatten()) ), np.shape(Z_core) )
 
     #s_noisy= np.sqrt( (f_total + (0.0000001*np.sin(r1)) )**2 + (0.0000001*np.sin(r2))**2) #+(0.00001*np.reshape(np.random.normal(0,1,len(Z_core.flatten())),np.shape(Z_core))*f_total ) 
+    
+    #### original params that were used to generated 3comps_log and 3comps_lin
     s_noisy = f_total + (0.08*np.reshape(np.random.normal(0,1,len(Z_core.flatten())),np.shape(Z_core))*f_total ) + \
     np.abs(0.0000000000000001*np.sin(r1))
+    #### new params that are used to generated 3_comps_log_noisy
+    #s_noisy = f_total + (0.25*np.reshape(np.random.normal(0,1,len(Z_core.flatten())),np.shape(Z_core))*f_total ) + \
+    #np.abs(0.0000000000000001*np.sin(r1))
     
     ### interpolation to the Alfv normalized grid
     v_xn= v_x/alfv[i]
@@ -72,6 +77,8 @@ def create_image_helios_3comps(dim_params, v_x,v_y, v_xa, v_ya):
     points = np.array( (v_xn.flatten(), v_yn.flatten()) ).T
     values = s_noisy.flatten()/np.max(s_noisy.flatten()) # noisy
     #values = ((Z_core.flatten()+Z_beam.flatten())/np.max(Z_core.flatten()+Z_beam.flatten())) # noise free
+    
+    #grid_z0 = griddata(points, values, (v_xa, v_ya), method='linear')
     grid_z0 = griddata(points, values, (v_xa, v_ya), method='linear')
     grid_z0 = np.nan_to_num(grid_z0, nan=0.000001)
   
@@ -95,7 +102,7 @@ def create_image_helios_3comps(dim_params, v_x,v_y, v_xa, v_ya):
     cnt.set_clim(vmin=-1, vmax=0) # for log-scale normalization
     #cnt.set_clim(vmin=0.01, vmax=1) # for lin-scale normalization
   
-    filename = r'D:\Research\Data\DISP\VDF_images_helios_3comps_log\\' + str(i).zfill(5) + '_QQ.jpg'
+    filename = r'D:\Research\Data\DISP\VDF_images_helios_3comps_log_lowres\\' + str(i).zfill(5) + '_QQ.jpg'
     fig.savefig(filename,bbox_inches='tight')
    
     plt.clf()

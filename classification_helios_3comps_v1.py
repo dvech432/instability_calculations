@@ -60,8 +60,8 @@ del all_images
 from cnn_classification import cnn_classification
 m=cnn_classification()
 
-# #from gen_AlexNet import gen_AlexNet
-# #m=gen_AlexNet()
+from gen_AlexNet import gen_AlexNet
+m=gen_AlexNet()
 
 m.fit(X_train, y_train, validation_data=(X_test,y_test), batch_size=100,epochs=30, verbose=1)
 
@@ -95,19 +95,20 @@ for k in range(0,len(op_type)):
       print(str(u))
       u=u+1
       
-  filename=(r'D:\Research\Data\Van_Allen_Probes\grid_search\\' + op_type[k] + '.sav')
+  filename=(r'D:\Research\Data\Van_Allen_Probes\grid_search_log\\' + op_type[k] + '.sav')
   pickle.dump([train_history,params], open(filename, 'wb'))      
 
 # %%
 ### plotting the result of the grid search
 k=0
-filename=(r'D:\Research\Data\Van_Allen_Probes\grid_search\\' + op_type[k] + '.sav')
+filename=(r'D:\Research\Data\Van_Allen_Probes\grid_search_log\\' + op_type[k] + '.sav')
 results = pickle.load(open(filename, 'rb'))
   
 val_acc=[]
 x=[]
 y=[]
 slope=[]
+gradient=[]
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 
@@ -120,17 +121,20 @@ for i in range(0,len(results[0])):
   val_acc.append(results[0][i]['val_accuracy'][-1])
   x.append(results[1][i][1]) # learning rate
   y.append(results[1][i][2]) # decay rate
-
+  gradient.append(np.diff((results[0][i]['val_accuracy'][-2:])))
+  
 slope=np.array(slope)
 val_acc=np.array(val_acc)
 x=np.array(x)
 y=np.array(y)  
+gradient=np.array(gradient)
 
 print('Best learning rate:'  + str(x[np.argmax(val_acc)]))
 print('Best decay rate:'  + str(y[np.argmax(val_acc)]))
 print('Peak accuracy:'  + str(val_acc[np.argmax(val_acc)]))
 
 
+plt.scatter(gradient,val_acc)
 # plt.scatter(val_acc,slope)
 # plt.xlim((0.7,0.85))
 # plt.ylim((-0.01,0.01))

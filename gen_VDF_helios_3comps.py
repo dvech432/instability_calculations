@@ -65,8 +65,14 @@ b0 = dim_params[:,0]
 n_total=np.nansum(np.dstack((n_core,n_beam,n_alpha)),2)
 alfv = (b0*10**-9./np.sqrt(4*np.pi*10**-7.*(n_total)*100**3*1.67*10**-27))
 
-v_x, v_y=np.meshgrid(np.linspace(-200*1000,200*1000,100),np.linspace(-200*1000,200*1000,100))
+# original params
+#v_x, v_y=np.meshgrid(np.linspace(-200*1000,200*1000,20),np.linspace(-200*1000,200*1000,20))
+#v_xa, v_ya= np.meshgrid(np.linspace(-2,2,100),np.linspace(-2,2,100))
+
+# updated params
+v_x, v_y=np.meshgrid(np.linspace(-200*1000,200*1000,25),np.linspace(-200*1000,200*1000,25))
 v_xa, v_ya= np.meshgrid(np.linspace(-2,2,100),np.linspace(-2,2,100))
+
 
 import matplotlib.pyplot as plt
 from scipy.interpolate import griddata
