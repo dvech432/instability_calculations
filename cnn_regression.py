@@ -34,7 +34,7 @@ def cnn_regression():
   m.add(layers.Dropout(0.2))
   m.add(layers.Flatten())
   m.add(layers.Dense(1, activation='linear'))
-  opt = keras.optimizers.Adam(learning_rate=0.0001, decay=1e-6)
+  opt = keras.optimizers.Adam(learning_rate=0.001, decay=1e-6)
   m.compile(optimizer = opt, loss = 'mean_squared_error')
   return m
 

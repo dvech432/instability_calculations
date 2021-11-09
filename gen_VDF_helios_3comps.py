@@ -71,8 +71,12 @@ alfv = (b0*10**-9./np.sqrt(4*np.pi*10**-7.*(n_total)*100**3*1.67*10**-27))
 
 # updated params
 v_x, v_y=np.meshgrid(np.linspace(-200*1000,200*1000,25),np.linspace(-200*1000,200*1000,25))
-v_xa, v_ya= np.meshgrid(np.linspace(-2,2,100),np.linspace(-2,2,100))
 
+#### original, mega high res
+#v_xa, v_ya= np.meshgrid(np.linspace(-2,2,100),np.linspace(-2,2,100))
+
+#### more realistic
+v_xa, v_ya= np.meshgrid(np.linspace(-2,2,100),np.linspace(-2,2,100))
 
 import matplotlib.pyplot as plt
 from scipy.interpolate import griddata

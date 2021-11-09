@@ -47,7 +47,8 @@ def create_image_helios_3comps(dim_params, v_x,v_y, v_xa, v_ya):
 
   from PIL import Image
   
-  for i in range(0,len(n_core)):
+  #for i in range(0,len(n_core)):
+  for i in range(26000,len(n_core)):    
     Z_core=n_core[i]*(m/(2*np.pi*kb*T_core_perp[i]))*(m/(2*np.pi*kb*T_core_par[i]))**(0.5)*np.exp(-m*((v_x)**2)/(2*kb*T_core_par[i]))*np.exp(-m*((v_y)**2)/(2*kb*T_core_perp[i]))  
     Z_beam=n_beam[i]*(m/(2*np.pi*kb*T_beam_perp[i]))*(m/(2*np.pi*kb*T_beam_par[i]))**(0.5)*np.exp(-m*(((v_beam[i]-v_core[i])-v_x)**2)/(2*kb*T_beam_par[i]))*np.exp(-m*((v_y)**2)/(2*kb*T_beam_perp[i]))
     Z_alpha=n_alpha[i]*((4*m)/(2*np.pi*kb*T_alpha_perp[i]))*((4*m)/(2*np.pi*kb*T_alpha_par[i]))**(0.5)*np.exp(-(4*m)*(((v_alpha[i]-v_core[i])-v_x)**2)/(2*kb*T_alpha_par[i]))*np.exp(-(4*m)*((v_y)**2)/(2*kb*T_alpha_perp[i]))
@@ -102,7 +103,7 @@ def create_image_helios_3comps(dim_params, v_x,v_y, v_xa, v_ya):
     cnt.set_clim(vmin=-1, vmax=0) # for log-scale normalization
     #cnt.set_clim(vmin=0.01, vmax=1) # for lin-scale normalization
   
-    filename = r'D:\Research\Data\DISP\VDF_images_helios_3comps_log_lowres\\' + str(i).zfill(5) + '_QQ.jpg'
+    filename = r'D:\Research\Data\DISP\VDF_images_helios_3comps_log\\' + str(i).zfill(5) + '_QQ.jpg'
     fig.savefig(filename,bbox_inches='tight')
    
     plt.clf()

@@ -7,7 +7,8 @@ import pandas as pd
 import numpy as np
 
 ## size of all the data:
-RR=10000
+RR0=0 # start id
+RR=25000 # how many rows starting with RR0
 
 ##################### Load in image files
 import os
@@ -17,7 +18,7 @@ import skimage.io as io
 all_images = []
 #for i in range(0,len(folder_content)):
 for i in range(0,RR):    
-  filename = r'D:\Research\Data\DISP\VDF_images_helios_3comps\\' + folder_content[i]
+  filename = r'D:\Research\Data\DISP\VDF_images_helios_3comps_log\\' + folder_content[i]
   img = io.imread(filename,as_gray=True)
   all_images.append(img)
   print(str(i))
@@ -27,20 +28,29 @@ all_images = all_images.reshape(-1, 100, 100, 1)
 ##################### Load in image labels
 
 filename = r'D:\Research\Data\DISP\NyKris_Durovcova_Helios.h5'
-helios_df = pd.read_hdf(filename,key='/all data', start=0, stop=RR)
+helios_df = pd.read_hdf(filename,key='/all data', start=RR0, stop=RR0+RR)
 
 label=np.array(helios_df[ 'gam_max_fine'])
 label= np.nan_to_num(label, nan=0)
-label[label>0]=1
+label[label>0]=1 # generate labels, 1== unstable, 0== stable
 
 unstable_label=np.argwhere(label==1) # picking the unstable VDFs
 
-pol = np.array(helios_df[ ['Im(E_y)']    ])
-pol=pol[unstable_label[:,0]]
-pol[pol>0]=1
-pol[pol<0]=0
+# pol = np.array(helios_df[ ['Im(E_y)']    ])
+# pol=pol[unstable_label[:,0]]
+# pol[pol>0]=1
+# pol[pol<0]=0
 
 growth_params=np.array(helios_df[ ['kperp_max_fine', 'kpar_max_fine', 'gam_max_fine']    ])
+
+mp=1.67272*10**-27 # proton mass
+q=1.60217662*10**-19 # charge
+kb=1.38064852*10**-23 # boltzmann constant
+c=299792458 # speed of light
+Omega=((10**-9)*q*helios_df['B [nT]'])/mp # cyclotron period
+
+#growth_params[:,2]=growth_params[:,2]/Omega
+
 Y = np.array( [np.sqrt(growth_params[:,0]**2 + growth_params[:,1]**2), growth_params[:,2]]).T
 
 from scipy import stats
@@ -50,14 +60,20 @@ Y=np.log10(Y[unstable_label[:,0],:])
 Y_mean=np.mean(Y,axis=0)
 Y_std=np.mean(Y,axis=0)
 
-Y_norm=stats.zscore(Y,axis=0)
+Y_mean=Y.mean(axis=0) # saving mean
+Y_std=Y.std(axis=0) # saving std
+Y_norm=(Y-Y_mean)/Y_std # ready matrix
+       
+#Y_norm=stats.zscore(Y,axis=0)
 #Y_norm=np.squeeze(Y_norm,axis=1)
 
 all_images = all_images[unstable_label[:,0],:,:,:]
-    
+
+
+# %%    
 ##################### split into train and test
-#### What parameter should be predicted? 0: |k|, 1: gamma
-q=0
+#### What parameter should be predicted? 0: |k|, 1: gamma/Omega
+q=1
 
 rr=len(unstable_label)
 
@@ -70,8 +86,8 @@ X_test=all_images[idx_test,:,:,:]
 y_train=Y_norm[idx_train,q]
 y_test=Y_norm[idx_test,q]
 
-pol_train=pol[idx_train]
-pol_test=pol[idx_test]
+# pol_train=pol[idx_train]
+# pol_test=pol[idx_test]
 
 ##################### model training
 
@@ -83,17 +99,59 @@ m=cnn_regression()
 
 m.fit(X_train, y_train, validation_data=(X_test,y_test), batch_size=100,epochs=30, verbose=1)
 
-#pred_labels=np.round(m.predict(X_test))
+#m.save(r'D:\Research\Data\Van_Allen_Probes\CNN\log_model_25k_q1') #alexnet
+
+from keras.models import load_model
+m = load_model(r'D:\Research\Data\Van_Allen_Probes\CNN\log_model_25k_q1')
+
+
+from datetime import datetime
+start_time = datetime.now()
 pred=(m.predict(X_test))
+end_time = datetime.now()
+print('Duration: {}'.format(end_time - start_time))
+
 
 import matplotlib.pyplot as plt
-plt.scatter((Y_mean[q]+(y_test*Y_std[q])),(Y_mean[q]+(pred*Y_std[q])))
-plt.plot(np.linspace(-2,2),np.linspace(-2,2),c='black')
-
+#plt.scatter(y_test,pred)
+#plt.scatter((Y_mean[q]+(y_test*Y_std[q])),(Y_mean[q]+(pred*Y_std[q])))
+plt.hist2d((Y_mean[q]+(y_test*Y_std[q])).flatten(),(Y_mean[q]+(pred*Y_std[q])).flatten(), bins=50, cmap='Blues')
+cb = plt.colorbar()
+cb.set_label('counts in bin')
+if q==1:
+  plt.plot(np.linspace(-3,0),np.linspace(-3,0),c='black',linewidth=0.5)
+  plt.xlim((-3,-0.5))
+  plt.ylim((-3,-0.5))
+if q==0:
+  plt.plot(np.linspace(-0.5,0),np.linspace(-0.5,0),c='black',linewidth=0.5)
+  plt.xlim((-0.5,0))
+  plt.ylim((-0.5,0))
+  
+plt.xlabel('True')
+plt.ylabel('Predicted')
 #m.save(r'D:\Research\Data\Van_Allen_Probes\CNN\classification_trained') #alexnet
 #from keras.models import load_model
 #m = load_model(r'D:\Research\Data\Van_Allen_Probes\CNN\classification_trained') #alexnet
 
+# %% kernel density estimation
+# from scipy.stats import gaussian_kde
+# data = np.vstack([(Y_mean[q]+(y_test*Y_std[q])).flatten(), (Y_mean[q]+(pred*Y_std[q])).flatten()])
+# kde = gaussian_kde(data)
+
+# # evaluate on a regular grid
+# xgrid = np.linspace(-3.5,0, 80)
+# ygrid = np.linspace(-3.5, 0, 80)
+# Xgrid, Ygrid = np.meshgrid(xgrid, ygrid)
+# Z = kde.evaluate(np.vstack([Xgrid.ravel(), Ygrid.ravel()]))
+
+# # Plot the result as an image
+# plt.imshow(Z.reshape(Xgrid.shape),
+#            origin='lower', aspect='auto',
+#            extent=[-3.5, 3.5, -6, 6],
+#            cmap='Blues')
+# cb = plt.colorbar()
+# cb.set_label("density")
+# plt.plot(np.linspace(-4,0),np.linspace(-4,0),c='black')
 # %% predicting polarization
 
 # from cnn_classification import cnn_classification
@@ -133,7 +191,7 @@ for k in range(0,len(op_type)):
 # %%
 ### plotting the result of the grid search
 k=0
-filename=(r'D:\Research\Data\Van_Allen_Probes\grid_search\\' + op_type[k] + '.sav')
+filename=(r'D:\Research\Data\Van_Allen_Probes\grid_search_regression\\' + op_type[k] + '.sav')
 results = pickle.load(open(filename, 'rb'))
   
 val_acc=[]
@@ -260,5 +318,176 @@ print(len(np.argwhere(pred_labels[p2]==y_test[p2]))/len(p2))
 print(len(np.argwhere(pred_labels[p3]==y_test[p3]))/len(p3))
 print(len(np.argwhere(pred_labels[p4]==y_test[p4]))/len(p4))
 
+# %% generating figures for paper
+
+# %% Figure 5 histogram of true vs predicted values
+# q==1
+h=np.arange(0,101,10)
+import matplotlib.pyplot as plt
+#plt.scatter(y_test,pred)
+#plt.scatter((Y_mean[q]+(y_test*Y_std[q])),(Y_mean[q]+(pred*Y_std[q])))
+plt.figure(dpi=550)
+
+xbins = np.logspace(-4,0,40)
+ybins = np.logspace(-4,0,40)
+
+plt.hist2d(10**(Y_mean[q]+(y_test*Y_std[q])).flatten(),10**(Y_mean[q]+(pred*Y_std[q])).flatten(),cmap='viridis',bins=(xbins,ybins) )
+plt.xscale('log')
+plt.yscale('log')  
+
+cb = plt.colorbar()
+cb.set_label('counts in bin')
+plt.plot(np.logspace(-4,0),np.logspace(-4,0),c='black',linewidth=1)
+
+plt.xlabel('Ground truth '+ '$\gamma/\Omega_p$')
+plt.ylabel('Predicted ' + '$\gamma/\Omega_p$')
+#plt.xlim((-3,-0.5))
+#plt.ylim((-3,-0.5))
+plt.savefig(r'C:\Users\vechd\.spyder-py3\instability_calc\Figures\reg_gamma.jpg', format='jpg')
+
+#################### #########################
+
+plt.figure(dpi=750)
+h=np.arange(0,101,10)
+xx=10**(Y_mean[q]+(y_test*Y_std[q])).flatten()
+yy=10**(Y_mean[q]+(pred*Y_std[q])).flatten()
+
+avg=[]
+err=[]
+for i in range(len(h)-1):
+  h0=np.nonzero( (xx > np.percentile(xx,h[i] ) ) & (xx < np.percentile(xx,h[i+1] ) )  )[0]
+  avg=np.append(avg,np.nanmean(xx[h0]))
+  err=np.append(err, np.std( (np.abs( (xx[h0]-yy[h0]) )    )/xx[h0] ) )
+
+
+plt.plot(np.logspace(-3,-1), np.full((50, 1), 1),c='black')
+plt.plot(avg, err*100)
+plt.scatter(avg, err*100)
+plt.xscale('log')
+plt.ylim((0,5*100))
+plt.xlim((10**-3,10**-1))
+plt.xlabel('Ground truth '+ '$\gamma/\Omega_p$')
+plt.ylabel('1$\sigma$ relative error')
+
+plt.savefig(r'C:\Users\vechd\.spyder-py3\instability_calc\Figures\reg_error.jpg', format='jpg')
+
+
+package=[]
+package.append(avg)
+package.append(err)
+from scipy.io import savemat
+filename=(r'D:\Research\Data\Van_Allen_Probes\q1100.mat')
+savemat(filename, {"foo":package})
+
+
+# %% q=0
+h=np.arange(0,101,10)
+import matplotlib.pyplot as plt
+plt.figure(dpi=550)
+plt.hist2d(10**(Y_mean[q]+(y_test*Y_std[q])).flatten(),10**(Y_mean[q]+(pred*Y_std[q])).flatten(), bins=75, cmap='viridis') 
+cb = plt.colorbar()
+cb.set_label('counts in bin')
+plt.plot(np.linspace(0,1),np.linspace(0,1),c='black',linewidth=1)
+plt.xlim((2*10**-1,1))
+plt.ylim((2*10**-1,1))
+plt.xscale('log')
+plt.yscale('log')  
+plt.xlabel('Ground truth '+ r'$k\rho_p$')
+plt.ylabel('Predicted ' + r'$k\rho_p$')
+
+
+plt.savefig(r'C:\Users\vechd\.spyder-py3\instability_calc\Figures\reg_rho.jpg', format='jpg')
+
+
+#################### #########################
+# analyzing relative error
+
+plt.figure(dpi=750)
+h=np.arange(0,101,10)
+xx=10**(Y_mean[q]+(y_test*Y_std[q])).flatten()
+yy=10**(Y_mean[q]+(pred*Y_std[q])).flatten()
+
+avg=[]
+err=[]
+for i in range(len(h)-1):
+  h0=np.nonzero( (xx > np.percentile(xx,h[i] ) ) & (xx < np.percentile(xx,h[i+1] ) )  )[0]
+  avg=np.append(avg,np.nanmean(xx[h0]))
+  err=np.append(err, np.std( (np.abs( (xx[h0]-yy[h0]) )    )/xx[h0] ) )
+
+
+plt.plot(np.logspace(-3,-1), np.full((50, 1), 1),c='black')
+plt.plot(avg, err*100)
+plt.scatter(avg, err*100)
+plt.xscale('log')
+plt.ylim((0,0.5*100))
+plt.xlim((2*10**-1,1))
+plt.xlabel('Ground truth '+ r'$k\rho_p$')
+plt.ylabel('1$\sigma$ relative error [%]')
+
+plt.savefig(r'C:\Users\vechd\.spyder-py3\instability_calc\Figures\reg_rho_error.jpg', format='jpg')
+
+
+package=[]
+package.append(avg)
+package.append(err)
+from scipy.io import savemat
+filename=(r'D:\Research\Data\Van_Allen_Probes\q0100.mat')
+savemat(filename, {"foo":package})
+
+# %% make final plots
+import scipy.io as sio
+plt.figure(dpi=750)
+filename=(r'D:\Research\Data\Van_Allen_Probes\q0100.mat')
+package=sio.loadmat(filename)
+plt.plot(package['foo'][0], package['foo'][1]*100,label='100x100')
+plt.scatter(package['foo'][0], package['foo'][1]*100)
+
+filename=(r'D:\Research\Data\Van_Allen_Probes\q035.mat')
+package=sio.loadmat(filename)
+plt.plot(package['foo'][0], package['foo'][1]*100,label='35x35')
+plt.scatter(package['foo'][0], package['foo'][1]*100)
+
+
+filename=(r'D:\Research\Data\Van_Allen_Probes\q025.mat')
+package=sio.loadmat(filename)
+plt.plot(package['foo'][0], package['foo'][1]*100,label='25x25')
+plt.scatter(package['foo'][0], package['foo'][1]*100)
+
+plt.legend()
+plt.xscale('log')
+plt.ylim((0,0.5*100))
+plt.xlim((2*10**-1,1))
+plt.xlabel('Ground truth '+ r'$k\rho_p$')
+plt.ylabel('1$\sigma$ relative error [%]')
+
+plt.savefig(r'C:\Users\vechd\.spyder-py3\instability_calc\Figures\reg_rho_errors.jpg', format='jpg')
+
+
+import scipy.io as sio
+plt.figure(dpi=750)
+filename=(r'D:\Research\Data\Van_Allen_Probes\q1100.mat')
+package=sio.loadmat(filename)
+plt.plot(package['foo'][0], package['foo'][1]*100,label='100x100')
+plt.scatter(package['foo'][0], package['foo'][1]*100)
+
+filename=(r'D:\Research\Data\Van_Allen_Probes\q135.mat')
+package=sio.loadmat(filename)
+plt.plot(package['foo'][0], package['foo'][1]*100,label='35x35')
+plt.scatter(package['foo'][0], package['foo'][1]*100)
+
+
+filename=(r'D:\Research\Data\Van_Allen_Probes\q125.mat')
+package=sio.loadmat(filename)
+plt.plot(package['foo'][0], package['foo'][1]*100,label='25x25')
+plt.scatter(package['foo'][0], package['foo'][1]*100)
+
+plt.legend()
+plt.xscale('log')
+plt.ylim((0,5*100))
+plt.xlim((10**-3,10**-1))
+plt.xlabel('Ground truth '+ '$\gamma/\Omega_p$')
+plt.ylabel('1$\sigma$ relative error [%]')
+
+plt.savefig(r'C:\Users\vechd\.spyder-py3\instability_calc\Figures\reg_omega_errors.jpg', format='jpg')
 
 
